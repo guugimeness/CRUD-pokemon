@@ -29,6 +29,8 @@ public:
     int getVelocidade() const;
     virtual int getTipo() const = 0; // Método abstrato
     virtual void imprime() const;
+
+    static bool comparaAtaque(const Pokemon* p1, const Pokemon* p2);
 private:
     string nome;
     int XP;
