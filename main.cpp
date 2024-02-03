@@ -47,7 +47,5 @@ int main() {
         cout << endl;
     } while(opcao != 'C');
 
-
-
+    
 }
-
