@@ -53,9 +53,12 @@ bool CRUD::adiciona(int tipo) {
 }
 
 void CRUD::recupera(){
+    // Abrindo o arquivo
     ifstream database(fileName, ios::binary);
+
+    // Verificando se o arquivo foi aberto
     if(!database.is_open()){
-        cerr << "Nao foi possivel abrir o arquivo" << endl;
+        cerr << "Não foi possivel abrir o arquivo!" << endl;
         return;
     }
 
@@ -63,51 +66,73 @@ void CRUD::recupera(){
     int tipo;
     int ataque, defesa, velAtk, velDef, vel;
     string ataqueEsp;
+    unsigned long int nomeTamanho;
 
-    
-    while(!database.eof()){
-        nomePokemon.erase();
+    pokemons.clear(); // Limpando o vetor para ler do arquivo
 
-        database.read(reinterpret_cast<char*>(&tipo), sizeof(tipo));
+    // Lendo tipo
+    database.read(reinterpret_cast<char*>(&tipo), sizeof(tipo));
 
-        getline(database, nomePokemon);
+    while(database.good()) {
 
+        // Lendo o tamanho da string para guardar o nome
+        database.read(reinterpret_cast<char*>(&nomeTamanho), sizeof(nomeTamanho));
+        nomePokemon.resize(nomeTamanho);
+        // Lendo o nome
+        database.read(reinterpret_cast<char*>(&nomePokemon[0]), nomeTamanho * sizeof(char));
+
+        // Lendo ataque
         database.read(reinterpret_cast<char*>(&ataque), sizeof(ataque));
+
+        // Lendo defesa
         database.read(reinterpret_cast<char*>(&defesa), sizeof(defesa));
+
+        // Lendo velocidade de ataque
         database.read(reinterpret_cast<char*>(&velAtk), sizeof(velAtk));
+
+        // Lendo velocidade de defesa
         database.read(reinterpret_cast<char*>(&velDef), sizeof(velDef));
+
+        // Lendo velocidade
         database.read(reinterpret_cast<char*>(&vel), sizeof(vel));
 
-        // Ainda nao implementado por causa da gravacao em funcao CRUD::grava
-        //getline(database, ataqueEsp);
+        // Lendo atributo único de cada tipo
+        database.read(reinterpret_cast<char*>(&nomeTamanho), sizeof(nomeTamanho));
+        ataqueEsp.resize(nomeTamanho);
+        database.read(reinterpret_cast<char*>(&ataqueEsp[0]), nomeTamanho * sizeof(char));
 
-        // Com certeza tem jeito de melhorar essa parte
-        if(tipo == AGUA)
-            pokemons.push_back(new Agua(nomePokemon, ataque, defesa, velAtk, velDef, vel, ataqueEsp));
-        else
+        if(tipo == FOGO) {
             pokemons.push_back(new Fogo(nomePokemon, ataque, defesa, velAtk, velDef, vel, ataqueEsp));
+        } else {
+            pokemons.push_back(new Agua(nomePokemon, ataque, defesa, velAtk, velDef, vel, ataqueEsp));
+        }
 
-        database.peek();
+        // Lendo tipo
+        database.read(reinterpret_cast<char*>(&tipo), sizeof(tipo));
     };
 
+    // Fechando o arquivo
+    database.close();
 };
 
 void CRUD::grava(){
+    // Abrindo o arquivo
     ofstream database(fileName, ios::binary);
 
     Pokemon* pokemon;
-    string nomePokemon;
-    unsigned int nomeTamanho;
+    Fogo* f;
+    Agua* a;
+    string nomePokemon, ataqueAgua, ataqueFogo;
+    unsigned long int nomeTamanho;
     int ataque, defesa, velAtk, velDef, vel;
     int tipo;
-
     unsigned long int qtdPokemons = pokemons.size(); // Evitar chamadas excessivas a size
+
     for(unsigned long int i = 0; i < qtdPokemons; i++){
         pokemon = pokemons[i];
 
         nomePokemon = pokemon->getNome();
         nomeTamanho = nomePokemon.size();
-
         tipo = pokemon->getTipo();
 
         // Tipo
@@ -116,25 +141,47 @@ void CRUD::grava(){
         // Nome
         database.write(reinterpret_cast<const char*>(&nomePokemon[0]), nomeTamanho * sizeof(char));
         database.write("\n", 1);
+
         // Ataque
         ataque = pokemon->getAtaque();
         database.write(reinterpret_cast<const char*>(&ataque), sizeof(int));
+
         // Defesa
         defesa = pokemon->getDefesa();
         database.write(reinterpret_cast<const char*>(&defesa), sizeof(int));
+
         // Vel.Atk.
         velAtk = pokemon->getVelAtk();
         database.write(reinterpret_cast<const char*>(&velAtk), sizeof(int));
+
         // Vel.Def.
         velDef = pokemon->getVelDef();
         database.write(reinterpret_cast<const char*>(&velDef), sizeof(int));
+
         // Vel
         vel = pokemon->getVelocidade();
         database.write(reinterpret_cast<const char*>(&vel), sizeof(int));
+
         // AtaqueEsp
-        // O getAtaqueEspecial nao esta implementado ent n pode ser escrito, tera fix dps
-        //database.write(reinterpret_cast<const char*>(&(pokemon->getAtaqueEspecial())[0]));
+        switch (tipo) {
+            case FOGO: {
+                f = dynamic_cast<Fogo*>(pokemons[i]);  // Convertendo para poder acessar o atributo especial
+                ataqueFogo = f->getAtaqueFogo();
+                nomeTamanho = ataqueFogo.size();
+                database.write(reinterpret_cast<const char*>(&ataqueFogo[0]), nomeTamanho * sizeof(char));
+                break;
+            }
+            case AGUA: {
+                a = dynamic_cast<Agua*>(pokemons[i]);  // Convertendo para poder acessar o atributo especial
+                ataqueAgua = a->getAtaqueAgua();
+                nomeTamanho = ataqueAgua.size();
+                database.write(reinterpret_cast<const char*>(&ataqueAgua[0]), nomeTamanho * sizeof(char));
+                break;
+            }
+        }
     }
+
+    // Fechando o arquivo
     database.close();
 };
 
@@ -175,8 +222,18 @@ bool CRUD::remove(string nome) {
 }
 
 bool CRUD::atualiza(string nome) {
-    string oi = nome;
-    bool ok = true;
+    int XP;
+    bool ok = false;
+    int pos = indice(nome);
+
+    if(pos != -1) {
+        cout << "Quando de XP quer adicionar para " << nome << "?" << endl;
+        cin >> XP;
+        pokemons[(long unsigned int)pos]->setXP(XP);
+        grava();
+        ok = true;
+    }
+
     return ok;
 }
 
@@ -192,14 +249,6 @@ char CRUD::opcao() {
     cout << "[C] Fechar pokedex" << endl;
     cin >> o;
     return (toupper(o));
-}
-
-void CRUD::grava() {
-    
-}
-
-void CRUD::recupera() {
-    
 }
 
 int CRUD::indice(string nome) {  // Acha a posição do objeto no vector
