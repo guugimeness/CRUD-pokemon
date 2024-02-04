@@ -85,5 +85,5 @@ void Pokemon::imprime() const {
 }
 
 bool Pokemon::comparaAtaque(const Pokemon* p1, const Pokemon* p2) {
-    return p1->ataque < p2->ataque  ;
+    return p1->ataque > p2->ataque  ;
 }

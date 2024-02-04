@@ -12,7 +12,6 @@ int main() {
 
     do {
         opcao = CRUD::opcao();
-
         switch (opcao) {
             case 'P': {
                 pokedex.imprime();
@@ -25,7 +24,7 @@ int main() {
                 break;
             }
             case 'S': {
-                pokedex.imprime();
+                pokedex.imprime(true);
                 break;
             }
             case 'F': {
@@ -34,6 +33,12 @@ int main() {
             }
             case 'A': {
                 pokedex.adiciona(AGUA);
+                break;
+            }
+            case 'U': {
+                cout << "Insira o nome do pokemon: " << endl;
+                cin >> nome;
+                pokedex.atualiza(nome);
                 break;
             }
             case 'R': {
@@ -47,5 +52,4 @@ int main() {
         cout << endl;
     } while(opcao != 'C');
 
-    
 }
