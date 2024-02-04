@@ -65,6 +65,7 @@ void CRUD::recupera(){
     string ataqueEsp;
 
     
+    database.peek(); // Makes sure the file has any content
     while(!database.eof()){
         nomePokemon.erase();
 
@@ -79,7 +80,7 @@ void CRUD::recupera(){
         database.read(reinterpret_cast<char*>(&vel), sizeof(vel));
 
         // Ainda nao implementado por causa da gravacao em funcao CRUD::grava
-        //getline(database, ataqueEsp);
+        getline(database, ataqueEsp);
 
         // Com certeza tem jeito de melhorar essa parte
         if(tipo == AGUA)
@@ -97,6 +98,7 @@ void CRUD::grava(){
 
     Pokemon* pokemon;
     string nomePokemon;
+    string ataqueEsp;
     unsigned int nomeTamanho;
     int ataque, defesa, velAtk, velDef, vel;
     int tipo;
@@ -132,8 +134,13 @@ void CRUD::grava(){
         vel = pokemon->getVelocidade();
         database.write(reinterpret_cast<const char*>(&vel), sizeof(int));
         // AtaqueEsp
-        // O getAtaqueEspecial nao esta implementado ent n pode ser escrito, tera fix dps
-        //database.write(reinterpret_cast<const char*>(&(pokemon->getAtaqueEspecial())[0]));
+        if(tipo == AGUA){
+            ataqueEsp = ((Agua*)pokemon)->getAtaqueAgua();
+        }else{
+            ataqueEsp = ((Fogo*)pokemon)->getAtaqueFogo();
+        }
+        database.write(reinterpret_cast<const char*>(&ataqueEsp[0]), ataqueEsp.size() * sizeof(char));
+        database.write("\n", 1);
     }
     database.close();
 };
@@ -152,25 +159,43 @@ void CRUD::imprime(bool sorted) {
 }
 
 void CRUD::imprime(string nome) {
-    int pos = indice(nome);
-
-    if(pos != -1) {
-        pokemons[(long unsigned int)pos]->imprime();
-    } else {
+    vector<int>* pos = indice(nome);
+        
+    if(pos->size() == 0){
         cout << "Este pokemon não está na sua pokedex!" << endl;
+    }else{
+        for(unsigned long int i = 0; i < pos->size(); i++)
+            pokemons[(*pos)[i]]->imprime();
     }
+    delete pos;
 }
 
 bool CRUD::remove(string nome) {
     bool ok = false;
-    int pos = indice(nome); // Acha a posição do pokemon no vector
+    vector<int>* pos = indice(nome); // Acha a posição do pokemon no vector
+    unsigned long int size = pos->size();
 
-    if(pos != -1) {
-        pokemons.erase(pokemons.begin() + pos);
+    if(size == 0){
+        ok = false;
+    } else if (size == 1){
+        pokemons.erase(pokemons.begin() + (*pos)[0]);
+        grava();
+        ok = true;
+    } else{
+        unsigned indexParaRemover = -1;
+        cout << "Há mais de um pokemon com esse nome! Qual deles você deseja remover?" << endl;
+        for (unsigned long int i = 0; i < size; i++){
+            cout << "[" << (i + 1) << "]: " << endl;
+            pokemons[(*pos)[i]]->imprime();
+        }
+        cout << "Digite o índice " << "[" << 1 << "-" << size << "]: ";
+        cin >> indexParaRemover;
+        indexParaRemover -= 1; // Para o usuário os arrays comecam em 1
+        pokemons.erase(pokemons.begin() + indexParaRemover);
         grava();
         ok = true;
     }
-    
+    delete pos;
     return ok;
 }
 
@@ -194,25 +219,15 @@ char CRUD::opcao() {
     return (toupper(o));
 }
 
-void CRUD::grava() {
-    
-}
-
-void CRUD::recupera() {
-    
-}
-
-int CRUD::indice(string nome) {  // Acha a posição do objeto no vector
+vector<int>* CRUD::indice(string nome) {  // Acha a posição do objeto no vector
+    vector<int>* indexes = new vector<int>();
     long unsigned int size = pokemons.size();
     long unsigned int pos = 0;
     
-    while(pos < size && pokemons[pos]->getNome() != nome) {
-        pos++;
+    for(pos = 0; pos < size; pos++){
+        if (pokemons[pos]->getNome() == nome)
+            indexes->push_back(pos);
     }
 
-    if(pos < size){
-        return (int)pos;
-    } else {
-        return -1;
-    }
+    return indexes;
 }
