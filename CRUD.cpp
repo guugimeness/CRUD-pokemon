@@ -225,14 +225,32 @@ bool CRUD::adiciona(int tipo) {
 // Remove pokemon
 bool CRUD::remove(string nome) {
     bool ok = false;
-    int pos = indice(nome); // Acha a posição do pokemon no vector
+    vector<long unsigned int>* pos = indice(nome); // Acha a posição do pokemon no vector
+    unsigned long int size = pos->size();
 
-    if(pos != -1) {
-        pokemons.erase(pokemons.begin() + pos);
+    if(size == 0) {
+        cout << "Este pokemon não está na sua pokedex!" << endl;
+    } else if(size == 1){
+        pokemons.erase(pokemons.begin() + (*pos)[0]);
+        grava();
+        ok = true;
+    } else {
+        unsigned long int indexParaRemover = -1;
+        cout << "Há mais de um pokemon com esse nome! Qual deles você deseja remover?" << endl;
+        for (unsigned long int i = 0; i < size; i++){
+            cout << "[" << (i + 1) << "]: " << endl;
+            pokemons[(*pos)[i]]->imprime();
+            cout << endl;
+        }
+        cout << "Digite o índice " << "[" << 1 << "-" << size << "]: ";
+        cin >> indexParaRemover;
+        cout << endl;
+        indexParaRemover = (*pos)[indexParaRemover-1]; // Para o usuário os arrays comecam em 1
+        pokemons.erase(pokemons.begin() + indexParaRemover);
         grava();
         ok = true;
     }
-    
+    delete pos;
     return ok;
 }
 
@@ -240,12 +258,35 @@ bool CRUD::remove(string nome) {
 bool CRUD::atualiza(string nome) {
     int XP;
     bool ok = false;
-    int pos = indice(nome);
+    vector<long unsigned int>* pos = indice(nome);
+    unsigned long int size = pos->size();
+    
+    if(size == 0) {
+        cout << "Este pokemon não está na sua pokedex!" << endl;
+        return ok;
+    } 
 
-    if(pos != -1) {
-        cout << "Quando de XP quer adicionar para " << nome << "?" << endl;
-        cin >> XP;
-        pokemons[(long unsigned int)pos]->setXP(XP);
+    cout << "Quando de XP quer adicionar para " << nome << "?" << endl;
+    cin >> XP;
+    cout << endl;
+
+    if(size == 1) {
+        pokemons[(long unsigned int)(*pos)[0]]->setXP(XP);
+        grava();
+        ok = true;
+    } else {
+        unsigned long int indexParaAdicionar = -1;
+        cout << "Há mais de um pokemon com esse nome! Para qual deles você deseja adicionar XP?" << endl;
+        for (unsigned long int i = 0; i < size; i++){
+            cout << "[" << (i + 1) << "]: " << endl;
+            pokemons[(*pos)[i]]->imprime();
+            cout << endl;
+        }
+        cout << "Digite o índice " << "[" << 1 << "-" << size << "]: ";
+        cin >> indexParaAdicionar;
+        cout << endl;
+        indexParaAdicionar -= 1; // Para o usuário os arrays comecam em 1
+        pokemons[(long unsigned int)(*pos)[indexParaAdicionar]]->setXP(XP);
         grava();
         ok = true;
     }
@@ -269,13 +310,17 @@ void CRUD::imprime(bool sorted) {
 
 // Imprime pokemon por nome
 void CRUD::imprime(string nome) {
-    int pos = indice(nome);
-
-    if(pos != -1) {
-        pokemons[(long unsigned int)pos]->imprime();
-    } else {
+    vector<long unsigned int>* pos = indice(nome);
+        
+    if(pos->size() == 0){
         cout << "Este pokemon não está na sua pokedex!" << endl;
+    } else {
+        for(unsigned long int i = 0; i < pos->size(); i++) {
+            pokemons[(*pos)[i]]->imprime();
+            cout << endl;
+        }
     }
+    delete pos;
 }
 
 // Menu de opções da pokedex
@@ -295,17 +340,15 @@ char CRUD::opcao() {
 }
 
 // Acha a posição do objeto no vector
-int CRUD::indice(string nome) {  
+vector<long unsigned int>* CRUD::indice(string nome) {  
+    vector<long unsigned int>* indexes = new vector<long unsigned int>;
     long unsigned int size = pokemons.size();
     long unsigned int pos = 0;
     
-    while(pos < size && pokemons[pos]->getNome() != nome) {
-        pos++;
+    for(pos = 0; pos < size; pos++) {
+        if(pokemons[pos]->getNome() == nome){
+            indexes->push_back(pos);
+        }
     }
-
-    if(pos < size){
-        return (int)pos;
-    } else {
-        return -1;
-    }
+    return indexes;
 }

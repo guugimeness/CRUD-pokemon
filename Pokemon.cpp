@@ -17,7 +17,7 @@ string Pokemon::getNome() const {
 }
 
 void Pokemon::setXP(int XP) {
-    this->XP = XP;
+    this->XP += XP;
 }
 
 int Pokemon::getXP() const {

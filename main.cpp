@@ -21,6 +21,7 @@ int main() {
             case 'N': {
                 cout << "Insira o nome do pokemon: " << endl;
                 cin >> nome;
+                cout << endl;
                 pokedex.imprime(nome);
                 break;
             }
@@ -39,12 +40,15 @@ int main() {
             case 'U': {
                 cout << "Insira o nome do pokemon: " << endl;
                 cin >> nome;
-                pokedex.atualiza(nome);
+                cout << endl;
+                bool ok = pokedex.atualiza(nome);
+                cout << "Atualização de XP " << (ok ? "feita com sucesso!" : "deu errado!") << endl;
                 break;
             }
             case 'R': {
                 cout << "Insira o nome do pokemon a ser removido: " << endl;
                 cin >> nome;
+                cout << endl;
                 bool ok = pokedex.remove(nome);
                 cout << "Remoção " << (ok ? "feita com sucesso!" : "deu errado!") << endl;
                 break;
