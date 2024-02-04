@@ -10,54 +10,14 @@ CRUD::CRUD(string fileName) : fileName(fileName) {
 }
 
 CRUD::~CRUD() {
+    // Deletando os objetos criados dinamicamente para manipular as informações
     for (auto objeto : pokemons) {
         delete objeto;
     }
-
     pokemons.clear();
 }
 
-bool CRUD::adiciona(int tipo) {
-    int ataque, defesa, velAtk, velDef, vel;
-    string nome, ataqueEsp;
-    Pokemon* p;
-
-    cin.ignore();
-    cout << "Nome do pokemon: ";
-    getline(cin, nome);
-    cout << "Ataque: ";
-    cin >> ataque;
-    cout << "Defesa: ";
-    cin >> defesa;
-    cout << "Velocidade de ataque: ";
-    cin >> velAtk;
-    cout << "Velocidade de defesa: ";
-    cin >> velDef;
-    cout << "Velocidade: ";
-    cin >> vel;
-
-    switch(tipo) {
-        case FOGO: {
-            cout << "Ataque especial de fogo: ";
-            cin.ignore();
-            getline(cin, ataqueEsp);
-            p = new Fogo(nome, ataque, defesa, velAtk, velDef, vel, ataqueEsp);
-            break;
-        }
-        case AGUA: {
-            cout << "Ataque especial de água: ";
-            cin.ignore();
-            getline(cin, ataqueEsp);
-            p = new Agua(nome, ataque, defesa, velAtk, velDef, vel, ataqueEsp);
-            break;
-        }
-    }
-
-    pokemons.push_back(p);
-    grava();
-    return true;
-}
-
+// Repera informações do arquivo para gerenciar em run time
 void CRUD::recupera(){
     // Abrindo o arquivo
     ifstream database(fileName, ios::binary);
@@ -68,11 +28,12 @@ void CRUD::recupera(){
         return;
     }
 
+    Fogo* f;
+    Agua* a;
     string nomePokemon;
-    int tipo;
-    int ataque, defesa, velAtk, velDef, vel;
+    int tipo, ataque, defesa, velAtk, velDef, vel, XP, HP;
     string ataqueEsp;
-    size_t nomeTamanho;
+    unsigned long int nomeTamanho, ataqueTamanho;
 
     pokemons.clear(); // Limpando o vetor para ler do arquivo
 
@@ -101,14 +62,28 @@ void CRUD::recupera(){
         database.read(reinterpret_cast<char*>(&vel), sizeof(vel));
 
         // Lendo atributo único de cada tipo
-        database.read(reinterpret_cast<char*>(&nomeTamanho), sizeof(nomeTamanho));
-        ataqueEsp.resize(nomeTamanho);
-        database.read(reinterpret_cast<char*>(&ataqueEsp[0]), (unsigned int)nomeTamanho);
+        database.read(reinterpret_cast<char*>(&ataqueTamanho), sizeof(ataqueTamanho));
+        ataqueEsp.resize(ataqueTamanho);
+        database.read(reinterpret_cast<char*>(&ataqueEsp[0]), (unsigned int)ataqueTamanho);
+
+        // Lendo XP
+        database.read(reinterpret_cast<char*>(&XP), sizeof(XP));
+
+        // Lendo HP
+        database.read(reinterpret_cast<char*>(&HP), sizeof(HP));
 
         if(tipo == FOGO) {
-            pokemons.push_back(new Fogo(nomePokemon, ataque, defesa, velAtk, velDef, vel, ataqueEsp));
+            f = new Fogo(nomePokemon, ataque, defesa, velAtk, velDef, vel, ataqueEsp);
+            // XP e HP são atributos padronizados pelo construtor
+            // Por isso, devem ser setados por fora
+            f->setXP(XP);
+            f->setHP(HP);
+            pokemons.push_back(f);
         } else {
-            pokemons.push_back(new Agua(nomePokemon, ataque, defesa, velAtk, velDef, vel, ataqueEsp));
+            a = new Agua(nomePokemon, ataque, defesa, velAtk, velDef, vel, ataqueEsp);
+            a->setXP(XP);
+            a->setHP(HP);
+            pokemons.push_back(a);
         }
 
         // Lendo tipo
@@ -119,6 +94,7 @@ void CRUD::recupera(){
     database.close();
 };
 
+// Grava o que foi feito em run time no arquivo
 void CRUD::grava(){
     // Abrindo o arquivo
     ofstream database(fileName, ios::binary);
@@ -127,7 +103,7 @@ void CRUD::grava(){
     Fogo* f;
     Agua* a;
     string nomePokemon, ataqueAgua, ataqueFogo;
-    int tipo, ataque, defesa, velAtk, velDef, vel;
+    int tipo, ataque, defesa, velAtk, velDef, vel, XP, HP;
     unsigned long int qtdPokemons = pokemons.size(); // Evitar chamadas excessivas a size
     unsigned long int nomeTamanho;
 
@@ -174,49 +150,79 @@ void CRUD::grava(){
         // Ataque Especial
         switch (tipo) {
             case FOGO: {
-                f = dynamic_cast<Fogo*>(pokemons[i]);  // Convertendo para poder acessar o atributo especial
+                f = dynamic_cast<Fogo*>(pokemon);  // Convertendo para poder acessar o atributo especial
                 ataqueFogo = f->getAtaqueFogo();
+                nomeTamanho = ataqueFogo.size();
                 database.write(reinterpret_cast<char *>(&nomeTamanho), sizeof(nomeTamanho));
                 database.write(reinterpret_cast<char*>(&ataqueFogo[0]), (unsigned int)nomeTamanho);
                 break;
             }
             case AGUA: {
-                a = dynamic_cast<Agua*>(pokemons[i]);  // Convertendo para poder acessar o atributo especial
+                a = dynamic_cast<Agua*>(pokemon);
                 ataqueAgua = a->getAtaqueAgua();
+                nomeTamanho = ataqueAgua.size();
                 database.write(reinterpret_cast<char *>(&nomeTamanho), sizeof(nomeTamanho));
                 database.write(reinterpret_cast<char*>(&ataqueAgua[0]), (unsigned int)nomeTamanho);
                 break;
             }
         }
+
+        // XP
+        XP = pokemon->getXP();
+        database.write(reinterpret_cast<char*>(&XP), sizeof(XP));
+
+        // HP
+        HP = pokemon->getHP();
+        database.write(reinterpret_cast<char*>(&HP), sizeof(HP));
     }
 
     // Fechando o arquivo
     database.close();
 };
 
-void CRUD::imprime(bool sorted) {
-    vector<Pokemon*> copy = pokemons;
+// Adiciona pokemon
+bool CRUD::adiciona(int tipo) {
+    int ataque, defesa, velAtk, velDef, vel;
+    string nome, ataqueEsp;
+    Pokemon* p;
 
-    if(sorted) {
-        sort(copy.begin(), copy.end(), Pokemon::comparaAtaque);
+    cin.ignore();
+    cout << "Nome do pokemon: ";
+    getline(cin, nome);
+    cout << "Ataque: ";
+    cin >> ataque;
+    cout << "Defesa: ";
+    cin >> defesa;
+    cout << "Velocidade de ataque: ";
+    cin >> velAtk;
+    cout << "Velocidade de defesa: ";
+    cin >> velDef;
+    cout << "Velocidade: ";
+    cin >> vel;
+
+    switch(tipo) {
+        case FOGO: {
+            cout << "Ataque especial de fogo: ";
+            cin.ignore();
+            getline(cin, ataqueEsp);
+            p = new Fogo(nome, ataque, defesa, velAtk, velDef, vel, ataqueEsp);
+            break;
+        }
+        case AGUA: {
+            cout << "Ataque especial de água: ";
+            cin.ignore();
+            getline(cin, ataqueEsp);
+            p = new Agua(nome, ataque, defesa, velAtk, velDef, vel, ataqueEsp);
+            break;
+        }
     }
 
-    for(long unsigned int i = 0; i<copy.size(); i++) {
-        copy[i]->imprime();
-        cout << endl;
-    }
+    pokemons.push_back(p);
+    grava();
+    return true;
 }
 
-void CRUD::imprime(string nome) {
-    int pos = indice(nome);
-
-    if(pos != -1) {
-        pokemons[(long unsigned int)pos]->imprime();
-    } else {
-        cout << "Este pokemon não está na sua pokedex!" << endl;
-    }
-}
-
+// Remove pokemon
 bool CRUD::remove(string nome) {
     bool ok = false;
     int pos = indice(nome); // Acha a posição do pokemon no vector
@@ -230,6 +236,7 @@ bool CRUD::remove(string nome) {
     return ok;
 }
 
+// Atualiza XP
 bool CRUD::atualiza(string nome) {
     int XP;
     bool ok = false;
@@ -246,6 +253,32 @@ bool CRUD::atualiza(string nome) {
     return ok;
 }
 
+// Imprime todos os pokemons
+void CRUD::imprime(bool sorted) {
+    vector<Pokemon*> copy = pokemons;
+
+    if(sorted) {
+        sort(copy.begin(), copy.end(), Pokemon::comparaAtaque);
+    }
+
+    for(long unsigned int i = 0; i<copy.size(); i++) {
+        copy[i]->imprime();
+        cout << endl;
+    }
+}
+
+// Imprime pokemon por nome
+void CRUD::imprime(string nome) {
+    int pos = indice(nome);
+
+    if(pos != -1) {
+        pokemons[(long unsigned int)pos]->imprime();
+    } else {
+        cout << "Este pokemon não está na sua pokedex!" << endl;
+    }
+}
+
+// Menu de opções da pokedex
 char CRUD::opcao() {
     char o;
     cout << "** Bem-vindo à sua Pokedex! **" << endl;
@@ -261,7 +294,8 @@ char CRUD::opcao() {
     return (toupper(o));
 }
 
-int CRUD::indice(string nome) {  // Acha a posição do objeto no vector
+// Acha a posição do objeto no vector
+int CRUD::indice(string nome) {  
     long unsigned int size = pokemons.size();
     long unsigned int pos = 0;
     
