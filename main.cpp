@@ -11,10 +11,11 @@ int main() {
     CRUD pokedex("info.dat");
 
     do {
-        opcao = CRUD::opcao();
+        opcao = pokedex.opcao();
+        cout << endl;
         switch (opcao) {
             case 'P': {
-                pokedex.imprime();
+                pokedex.imprime(false); // Na ordem de inserção
                 break;
             }
             case 'N': {
@@ -24,7 +25,7 @@ int main() {
                 break;
             }
             case 'S': {
-                pokedex.imprime(true);
+                pokedex.imprime(true);  // Do mais "forte" para o mais "fraco" 
                 break;
             }
             case 'F': {
