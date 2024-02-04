@@ -18,7 +18,7 @@ public:
 private:
     void grava();
     void recupera();
-    int indice(string nome);
+    vector<long unsigned int>* indice(string nome);
 
     string fileName;
     vector<Pokemon *> pokemons;
