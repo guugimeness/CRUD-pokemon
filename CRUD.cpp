@@ -6,7 +6,7 @@
 using namespace std;
 
 CRUD::CRUD(string fileName) : fileName(fileName) {
-    recupera();
+    recupera(); // Perisistência das informações
 }
 
 CRUD::~CRUD() {
@@ -17,7 +17,7 @@ CRUD::~CRUD() {
     pokemons.clear();
 }
 
-// Repera informações do arquivo para gerenciar em run time
+// Recupera informações do arquivo para gerenciar em run time
 void CRUD::recupera(){
     // Abrindo o arquivo
     ifstream database(fileName, ios::binary);
@@ -231,13 +231,13 @@ bool CRUD::remove(string nome) {
     if(size == 0) {
         cout << "Este pokemon não está na sua pokedex!" << endl;
     } else if(size == 1){
-        pokemons.erase(pokemons.begin() + (*pos)[0]);
+        pokemons.erase(pokemons.begin() + (long int)(*pos)[0]);
         grava();
         ok = true;
-    } else {
-        unsigned long int indexParaRemover = -1;
+    } else {    // Tratamento do caso em que há mais de um objeto com o mesmo nome
+        long unsigned int indexParaRemover;
         cout << "Há mais de um pokemon com esse nome! Qual deles você deseja remover?" << endl;
-        for (unsigned long int i = 0; i < size; i++){
+        for (unsigned long int i = 0; i < size; i++){   // Mostrando as opções de escolha para o usuário
             cout << "[" << (i + 1) << "]: " << endl;
             pokemons[(*pos)[i]]->imprime();
             cout << endl;
@@ -246,7 +246,7 @@ bool CRUD::remove(string nome) {
         cin >> indexParaRemover;
         cout << endl;
         indexParaRemover = (*pos)[indexParaRemover-1]; // Para o usuário os arrays comecam em 1
-        pokemons.erase(pokemons.begin() + indexParaRemover);
+        pokemons.erase(pokemons.begin() + (long int)indexParaRemover);
         grava();
         ok = true;
     }
@@ -274,10 +274,10 @@ bool CRUD::atualiza(string nome) {
         pokemons[(long unsigned int)(*pos)[0]]->setXP(XP);
         grava();
         ok = true;
-    } else {
-        unsigned long int indexParaAdicionar = -1;
+    } else {    // Tratamento do caso em que há mais de um objeto com o mesmo nome
+        unsigned long int indexParaAdicionar;
         cout << "Há mais de um pokemon com esse nome! Para qual deles você deseja adicionar XP?" << endl;
-        for (unsigned long int i = 0; i < size; i++){
+        for (unsigned long int i = 0; i < size; i++){   // Mostrando as opções de escolha para o usuário
             cout << "[" << (i + 1) << "]: " << endl;
             pokemons[(*pos)[i]]->imprime();
             cout << endl;
@@ -285,8 +285,8 @@ bool CRUD::atualiza(string nome) {
         cout << "Digite o índice " << "[" << 1 << "-" << size << "]: ";
         cin >> indexParaAdicionar;
         cout << endl;
-        indexParaAdicionar -= 1; // Para o usuário os arrays comecam em 1
-        pokemons[(long unsigned int)(*pos)[indexParaAdicionar]]->setXP(XP);
+        indexParaAdicionar = (*pos)[indexParaAdicionar-1]; // Para o usuário os arrays comecam em 1
+        pokemons[indexParaAdicionar]->setXP(XP);
         grava();
         ok = true;
     }
@@ -340,7 +340,7 @@ char CRUD::opcao() {
 }
 
 // Acha a posição do objeto no vector
-vector<long unsigned int>* CRUD::indice(string nome) {  
+vector<long unsigned int>* CRUD::indice(string nome) {
     vector<long unsigned int>* indexes = new vector<long unsigned int>;
     long unsigned int size = pokemons.size();
     long unsigned int pos = 0;
@@ -350,5 +350,5 @@ vector<long unsigned int>* CRUD::indice(string nome) {
             indexes->push_back(pos);
         }
     }
-    return indexes;
+    return indexes;     // Retorna um vetor com a posição de objetos com o mesmo nome
 }

@@ -2,6 +2,7 @@
 
 Pokemon::Pokemon(string nome, int ataque, int defesa, int velAtk, int velDef, int vel) :
 nome(nome), ataque(ataque), defesa(defesa), velocidadeAtk(velAtk), velocidadeDef(velDef), velocidade(vel) {
+    // Atributos padronizados para novos pokemons
     this->XP = 0;
     this->HP = 100;
 }
