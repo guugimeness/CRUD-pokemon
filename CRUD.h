@@ -10,7 +10,7 @@ public:
     CRUD(string fileName);
     virtual ~CRUD();
     bool adiciona(int tipo);
-    void imprime(bool sorted = false);
+    void imprime(bool sorted);
     void imprime(string nome);
     bool remove(string nome);
     bool atualiza(string nome);

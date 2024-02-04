@@ -31,10 +31,12 @@ int main() {
             }
             case 'F': {
                 pokedex.adiciona(FOGO);
+                cout << endl;
                 break;
             }
             case 'A': {
                 pokedex.adiciona(AGUA);
+                cout << endl;
                 break;
             }
             case 'U': {
@@ -43,6 +45,7 @@ int main() {
                 cout << endl;
                 bool ok = pokedex.atualiza(nome);
                 cout << "Atualização de XP " << (ok ? "feita com sucesso!" : "deu errado!") << endl;
+                cout << endl;
                 break;
             }
             case 'R': {
@@ -51,10 +54,11 @@ int main() {
                 cout << endl;
                 bool ok = pokedex.remove(nome);
                 cout << "Remoção " << (ok ? "feita com sucesso!" : "deu errado!") << endl;
+                cout << endl;
                 break;
             }
         }
-        cout << endl;
     } while(opcao != 'C');
 
+    return 0;
 }
