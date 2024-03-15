@@ -7,4 +7,4 @@ Para isso, foram criadas uma classe abstrata Pokemon e duas classes concretas (s
 O intuito foi simular com a CRUD uma Pokedex, uma espécie de “inventário” de Pokemons. Note que seria possível implementar ainda um sistema de batalhas e expandir o número de classes para abranger todos os tipos possíveis de Pokemons.
 Segue o diagrama UML do projeto:
 
-![UML](https://github.com/guugimeness/CRUD-pokemon/blob/82b7df688cefc31f83b7aa7ceb6401214025a37e/UML.png)
+![UML](https://github.com/guugimeness/CRUD-pokemon/blob/df43827b0c6862812e99db65d18e024cc8646031/assets/UML.png)
